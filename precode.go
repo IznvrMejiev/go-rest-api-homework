@@ -17,26 +17,27 @@ type Task struct {
 
 var tasks = map[string]Task{}
 
+// getTasks — GET /tasks
 func getTasks(w http.ResponseWriter, r *http.Request) {
-
 	w.Header().Set("Content-Type", "application/json")
 
-	err := json.NewEncoder(w).Encode(tasks)
+	data, err := json.Marshal(tasks) // Кодируем map в JSON
 	if err != nil {
-
 		http.Error(w, "Ошибка при кодировании задач", http.StatusInternalServerError)
+		return
 	}
+
+	w.WriteHeader(http.StatusOK) // 200 OK
+	w.Write(data)                // Отправляем JSON клиенту
 }
 
+// createTask — POST /tasks
 func createTask(w http.ResponseWriter, r *http.Request) {
-
 	w.Header().Set("Content-Type", "application/json")
 
 	var newTask Task
-
 	err := json.NewDecoder(r.Body).Decode(&newTask)
 	if err != nil {
-
 		http.Error(w, "Неверный формат данных", http.StatusBadRequest)
 		return
 	}
@@ -48,59 +49,73 @@ func createTask(w http.ResponseWriter, r *http.Request) {
 
 	tasks[newTask.ID] = newTask
 
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(newTask)
+	data, err := json.Marshal(newTask)
+	if err != nil {
+		http.Error(w, "Ошибка при кодировании задачи", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated) // 201 Created
+	w.Write(data)                     // Отправляем созданную задачу
 }
 
+// getTask — GET /tasks/{id}
 func getTask(w http.ResponseWriter, r *http.Request) {
-
 	w.Header().Set("Content-Type", "application/json")
 
 	taskID := chi.URLParam(r, "id")
-
 	task, exists := tasks[taskID]
 	if !exists {
-
 		http.Error(w, "Задача не найдена", http.StatusBadRequest)
 		return
 	}
 
-	json.NewEncoder(w).Encode(task)
+	data, err := json.Marshal(task)
+	if err != nil {
+		http.Error(w, "Ошибка при кодировании задачи", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(data)
 }
 
+// deleteTask — DELETE /tasks/{id}
 func deleteTask(w http.ResponseWriter, r *http.Request) {
-
 	w.Header().Set("Content-Type", "application/json")
 
 	taskID := chi.URLParam(r, "id")
-
 	_, exists := tasks[taskID]
 	if !exists {
-
 		http.Error(w, "Задача не найдена", http.StatusBadRequest)
 		return
 	}
 
 	delete(tasks, taskID)
 
+	response := map[string]string{"message": "Задача удалена"}
+	data, err := json.Marshal(response)
+	if err != nil {
+		http.Error(w, "Ошибка при кодировании ответа", http.StatusInternalServerError)
+		return
+	}
+
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"message": "Задача удалена"})
+	w.Write(data)
 }
 
+// main — запуск сервера
 func main() {
 	r := chi.NewRouter()
 
 	r.Get("/tasks", getTasks)
-
 	r.Post("/tasks", createTask)
-
 	r.Get("/tasks/{id}", getTask)
-
 	r.Delete("/tasks/{id}", deleteTask)
 
 	fmt.Println("✅ Сервер запущен на http://localhost:8080")
 	if err := http.ListenAndServe(":8080", r); err != nil {
-		fmt.Printf("Ошибка при запуске сервера: %s", err.Error())
+		fmt.Printf("Ошибка при запуске сервера: %s\n", err.Error())
 		return
 	}
 }
