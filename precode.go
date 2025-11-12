@@ -21,17 +21,16 @@ var tasks = map[string]Task{}
 func getTasks(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	data, err := json.Marshal(tasks) // Кодируем map в JSON
+	data, err := json.Marshal(tasks)
 	if err != nil {
 		http.Error(w, "Ошибка при кодировании задач", http.StatusInternalServerError)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK) // 200 OK
-	w.Write(data)                // Отправляем JSON клиенту
+	w.WriteHeader(http.StatusOK)
+	w.Write(data)
 }
 
-// createTask — POST /tasks
 func createTask(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -55,11 +54,10 @@ func createTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusCreated) // 201 Created
-	w.Write(data)                     // Отправляем созданную задачу
+	w.WriteHeader(http.StatusCreated)
+	w.Write(data)
 }
 
-// getTask — GET /tasks/{id}
 func getTask(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -80,7 +78,6 @@ func getTask(w http.ResponseWriter, r *http.Request) {
 	w.Write(data)
 }
 
-// deleteTask — DELETE /tasks/{id}
 func deleteTask(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -104,7 +101,6 @@ func deleteTask(w http.ResponseWriter, r *http.Request) {
 	w.Write(data)
 }
 
-// main — запуск сервера
 func main() {
 	r := chi.NewRouter()
 
